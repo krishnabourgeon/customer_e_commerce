@@ -1,0 +1,12 @@
+/// Represents a product/store category shown on the home screen.
+class Category {
+  final String id;
+  final String name;
+  final String emoji;
+
+  const Category({
+    required this.id,
+    required this.name,
+    required this.emoji,
+  });
+}
