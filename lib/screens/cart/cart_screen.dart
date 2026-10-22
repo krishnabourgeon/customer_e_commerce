@@ -106,7 +106,6 @@ class CartScreen extends StatelessWidget {
                   children: [
                     _SummaryRow(label: 'Subtotal', value: cart.subtotal),
                     const SizedBox(height: 8),
-                    _SummaryRow(label: 'Delivery Fee', value: cart.deliveryFee),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 10),
                       child: Divider(),

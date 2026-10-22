@@ -13,9 +13,7 @@ class CartProvider extends ChangeNotifier {
 
   double get subtotal => _items.fold(0, (sum, item) => sum + item.totalPrice);
 
-  double get deliveryFee => _items.isEmpty ? 0 : 30.0;
-
-  double get total => subtotal + deliveryFee;
+  double get total => subtotal;
 
   bool get isEmpty => _items.isEmpty;
 

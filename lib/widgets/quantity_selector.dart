@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// "- 1 +" stepper used on the Product Details screen and Cart items.
+// stepper used on the Product Details screen and Cart items.
 class QuantitySelector extends StatelessWidget {
   final int quantity;
   final VoidCallback onIncrement;

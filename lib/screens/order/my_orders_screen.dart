@@ -4,7 +4,6 @@ import '../../dummy_data/dummy_orders.dart';
 import '../../models/order.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/empty_state.dart';
-import 'order_tracking_screen.dart';
 
 /// My Orders screen with Active / Completed / Cancelled tabs, each showing
 /// order cards (store name, items, amount, status, view details).
@@ -142,21 +141,9 @@ class _OrderCard extends StatelessWidget {
             ],
           ),
           const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Divider()),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${order.itemCount} item${order.itemCount > 1 ? 's' : ''} • ₹${order.total.toStringAsFixed(0)}',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => OrderTrackingScreen(order: order)),
-                ),
-                child: const Text('View Details'),
-              ),
-            ],
+          Text(
+            '${order.itemCount} item${order.itemCount > 1 ? 's' : ''} • ₹${order.total.toStringAsFixed(0)}',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ],
       ),

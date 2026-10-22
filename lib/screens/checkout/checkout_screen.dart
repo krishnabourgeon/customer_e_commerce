@@ -277,12 +277,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/address_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
-import '../order/order_tracking_screen.dart';
-import '../address/add_address_screen.dart';
-import '../../dummy_data/dummy_orders.dart';
 
 enum PaymentMethod { cod, online }
 
@@ -303,132 +299,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (!mounted) return;
     context.read<CartProvider>().clear();
     setState(() => _placingOrder = false);
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => OrderTrackingScreen(order: dummyOrders.first)),
-      (route) => route.isFirst,
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 56),
+            const SizedBox(height: 12),
+            const Text('Order Placed!',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+            const SizedBox(height: 6),
+            const Text(
+              'Your order has been placed successfully.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: CustomButton(
+              label: 'Done',
+              onPressed: () => Navigator.pop(dialogCtx),
+            ),
+          ),
+        ],
+      ),
     );
+    if (!mounted) return;
+    Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
-    final addrProv = context.watch<AddressProvider>();
-    final selectedAddr = addrProv.selectedAddress;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-
-          // ── Delivery Address card ────────────────────────────────────
-          const Text('Delivery Address',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(AppRadius.md),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 40, width: 40,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        selectedAddr.label == 'Current Location'
-                            ? Icons.my_location_rounded
-                            : selectedAddr.label == 'Work'
-                                ? Icons.work_outline
-                                : Icons.home_outlined,
-                        color: AppColors.primary, size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(children: [
-                            Text(selectedAddr.label,
-                                style: const TextStyle(fontWeight: FontWeight.w700)),
-                            if (addrProv.isFetching) ...[
-                              const SizedBox(width: 8),
-                              const SizedBox(width: 12, height: 12,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
-                            ],
-                          ]),
-                          const SizedBox(height: 2),
-                          Text(
-                            addrProv.isFetching ? 'Detecting location…' : selectedAddr.fullAddress,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          if (selectedAddr.latitude != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              '${selectedAddr.latitude!.toStringAsFixed(4)}, ${selectedAddr.longitude!.toStringAsFixed(4)}',
-                              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => _showAddressPicker(context, addrProv),
-                      child: const Text('Change'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // GPS detect inline button
-                GestureDetector(
-                  onTap: addrProv.isFetching ? null : () async {
-                    await addrProv.useCurrentLocation();
-                    if (!mounted) return;
-                    if (addrProv.fetchState == LocationFetchState.error) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(addrProv.fetchError),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.error,
-                      ));
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.07),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.25)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.my_location_rounded, size: 15, color: AppColors.primary),
-                        const SizedBox(width: 6),
-                        Text(
-                          addrProv.isFetching ? 'Detecting…' : 'Use Current Location',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // ── Payment Options ──────────────────────────────────────────
           const Text('Payment Options',
@@ -481,7 +395,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const Divider(),
                 _SummaryRow(label: 'Subtotal', value: '₹${cart.subtotal.toStringAsFixed(0)}'),
                 const SizedBox(height: 6),
-                _SummaryRow(label: 'Delivery Fee', value: '₹${cart.deliveryFee.toStringAsFixed(0)}'),
                 const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider()),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -503,121 +416,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           const SizedBox(height: 12),
         ],
       ),
-    );
-  }
-
-  void _showAddressPicker(BuildContext context, AddressProvider addrProv) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg))),
-      builder: (sheetCtx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Delivery Address',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                    TextButton.icon(
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Add New'),
-                      onPressed: () {
-                        Navigator.pop(sheetCtx);
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => const AddAddressScreen()));
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-
-                // GPS option row
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    height: 40, width: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.my_location_rounded, color: AppColors.secondary, size: 20),
-                  ),
-                  title: const Text('Use Current Location',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: const Text('Detect via GPS automatically',
-                      style: TextStyle(fontSize: 12)),
-                  trailing: addrProv.isFetching
-                      ? const SizedBox(width: 20, height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondary))
-                      : const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    Navigator.pop(sheetCtx);
-                    await addrProv.useCurrentLocation();
-                    if (!mounted) return;
-                    if (addrProv.fetchState == LocationFetchState.error) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(addrProv.fetchError),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.error,
-                      ));
-                    }
-                  },
-                ),
-                const Divider(),
-
-                // Saved addresses list
-                ...List.generate(addrProv.addresses.length, (index) {
-                  final addr = addrProv.addresses[index];
-                  final isSelected = addrProv.selectedIndex == index;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Container(
-                      height: 40, width: 40,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primary.withOpacity(0.12)
-                            : AppColors.surface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        addr.label == 'Current Location'
-                            ? Icons.my_location_rounded
-                            : addr.label == 'Work'
-                                ? Icons.work_outline
-                                : Icons.home_outlined,
-                        color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                    title: Text(addr.label,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 14,
-                            color: isSelected ? AppColors.primary : AppColors.textPrimary)),
-                    subtitle: Text(addr.fullAddress,
-                        maxLines: 2, overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12)),
-                    trailing: isSelected
-                        ? const Icon(Icons.check_circle, color: AppColors.primary)
-                        : null,
-                    onTap: () {
-                      addrProv.selectAddress(index);
-                      Navigator.pop(sheetCtx);
-                    },
-                  );
-                }),
-                const SizedBox(height: 8),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }
